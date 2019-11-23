@@ -27,7 +27,6 @@ function checkForUpdates() {
       let version = remoteConfig.version
       let message = resp.data.message
       let updateFileUrl = resp.data.updateFileUrl
-      $cache.set("updateInfo", remoteConfig);
 
       $console.info("最新版本 -> " + version);
       $console.info("当前版本 -> " + currentVersion);
