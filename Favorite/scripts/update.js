@@ -44,8 +44,8 @@ function getLatestBuild(now) {
             }
           })
         } else {
-          if(now && $("mainView")) {
-            ui.showToastView($("mainView"), "blue", "当前版本已是最新")
+          if(now && $("superView")) {
+            ui.showToastView($("superView"), "blue", "当前版本已是最新")
           }
         }
       }
