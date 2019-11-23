@@ -1,5 +1,4 @@
-let ui = require('scripts/ui')
-let utils = require('scripts/utils')
+let ui = require('./ui')
 
 function getCurVersion() {
   let version = $file.exists("app.json")
@@ -46,7 +45,7 @@ function getLatestBuild(now) {
           })
         } else {
           if(now && $("mainView")) {
-            ui.showToastView($("mainView"), utils.mColor.blue, "当前版本已是最新")
+            ui.showToastView($("mainView"), "blue", "当前版本已是最新")
           }
         }
       }
@@ -86,9 +85,8 @@ function updateScript() {
   let url =
     "https://github.com/gee1k/JSBox-addins/raw/master/Favorite/.output/Favorite.box?raw=true";
   const scriptName = $addin.current.name;
-  let ui = require('scripts/ui')
-  if($("mainView")) {
-    ui.addProgressView($("mainView"), "开始更新...")
+  if($("superView")) {
+    ui.addProgressView($("superView"), "开始更新...")
   }
   $http.download({
     url: url,
@@ -145,24 +143,23 @@ function checkUpdate(now) {
 function needCheckup() {
   let nDate = new Date()
   let lastCT = $cache.get("lastCT")
-  return true
-  // if (lastCT == undefined) {
-  //   $cache.set("lastCT", nDate)
-  //   return true
-  // } else {
-  //   let tdoa = (nDate.getTime() - lastCT.getTime()) / (60 * 1000)
-  //   let interval = 1440
-  //   if ($app.env == $env.app) {
-  //     interval = 1
-  //   }
-  //   $console.info("离下次检测更新: " + (interval - tdoa) + "  分钟")
-  //   if (tdoa > interval) {
-  //     $cache.set("lastCT", nDate)
-  //     return true
-  //   } else {
-  //     return false
-  //   }
-  // }
+  if (lastCT == undefined) {
+    $cache.set("lastCT", nDate)
+    return true
+  } else {
+    let tdoa = (nDate.getTime() - lastCT.getTime()) / (60 * 1000)
+    let interval = 1440
+    if ($app.env == $env.app) {
+      interval = 1
+    }
+    $console.info("离下次检测更新: " + (interval - tdoa) + "  分钟")
+    if (tdoa > interval) {
+      $cache.set("lastCT", nDate)
+      return true
+    } else {
+      return false
+    }
+  }
 }
 
 module.exports = {
