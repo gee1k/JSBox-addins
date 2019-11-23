@@ -1,116 +1,172 @@
-const remoteConfigUrl = "https://raw.githubusercontent.com/gee1k/xTeko/master/Favorite/UpdateInfo"
+let ui = require('scripts/ui')
+let utils = require('scripts/utils')
 
-
-function readLocalVersion() {
-  if (!$file.exists("UpdateInfo")) {
-    return
-  }
-
-  let configFile = $file.read("UpdateInfo")
-  if (configFile == undefined || !configFile.string) {
-    return "1.0.0"
-  } else {
-    let updateInfo = JSON.parse(configFile.string)
-    return updateInfo.version
-  }
+function getCurVersion() {
+  let version = $file.exists("app.json")
+    ? JSON.parse($file.read("app.json").string).version
+    : "0.0.0";
+  return version;
 }
 
-currentVersion = readLocalVersion()
+function getCurBuild() {
+  let build = $file.exists("app.json")
+    ? JSON.parse($file.read("app.json").string).build
+    : "0";
+  return build;
+}
 
-//检查版本
-function checkForUpdates() {
-  $http.get({
-    url: remoteConfigUrl,
-    handler: function (resp) {
-      let remoteConfig = resp.data
+function getCurDate() {
+  let date = $file.exists("app.json")
+    ? JSON.parse($file.read("app.json").string).date
+    : "000000";
+  return date;
+}
 
-      let version = remoteConfig.version
-      let message = resp.data.message
-      let updateFileUrl = resp.data.updateFileUrl
-
-      $console.info("最新版本 -> " + version);
-      $console.info("当前版本 -> " + currentVersion);
-
-      if (versionCmp(version, currentVersion) == 1) {
-        $ui.alert({
-          title: "发现新版本",
-          message: message,
-          actions: [
-            {
-              title: "更新",
-              handler: function () {
-                $http.download({
-                  url: updateFileUrl,
-                  progress: function (bytesWritten, totalBytes) {
-                    var percentage = bytesWritten * 1.0 / totalBytes
-                    $ui.progress(percentage)
-                  },
-                  handler: function (resp) {
-                    var file = resp.data;
-                    if (file) {
-                      $addin.save({
-                        name: $addin.current.name,
-                        icon: $addin.current.icon,
-                        data: file,
-                        handler: function (success) {
-                          if (success) {
-                            $addin.restart()
-                          }
-                        }
-                      })
-                    }
-                  }
-                });
-              }
-            },
-            {
-              title: "取消",
-              handler: function () {
+function getLatestBuild(now) {
+  $http.download({
+    url: "https://raw.githubusercontent.com/gee1k/JSBox-addins/master/Favorite/app.json",
+    showsProgress: false,
+    timeout: 5,
+    handler: function(resp) {
+      if(resp.data) {
+        let appJson = JSON.parse(resp.data.string)
+        let updateBuild = appJson.build
+        let updateVersion = appJson.version
+        let force = appJson.force
+        if(parseInt(updateBuild) > parseInt(getCurBuild())) {
+          $http.download({
+            url: "https://raw.githubusercontent.com/gee1k/JSBox-addins/master/Favorite/updateDetail.md",
+            showsProgress: false,
+            timeout: 5,
+            handler: function(resp) {
+              if(resp.data) {
+                sureToUpdate(updateVersion, resp.data.string, force)
               }
             }
-          ]
-        });
+          })
+        } else {
+          if(now && $("mainView")) {
+            ui.showToastView($("mainView"), utils.mColor.blue, "当前版本已是最新")
+          }
+        }
       }
     }
   })
 }
 
-function versionCmp(s1, s2) {
-  var a = s1.split('.').map(function (s) {
-    return s2i(s);
-  });
-  var b = s2.split('.').map(function (s) {
-    return s2i(s);
-  });
-  var n = a.length < b.length ? a.length : b.length;
-  for (var i = 0; i < n; i++) {
-    if (a[i] < b[i]) {
-      return -1;
-    } else if (a[i] > b[i]) {
-      return 1;
+//确定升级？
+function sureToUpdate(version, des, force) {
+  let actions = (force)?[{
+    title: "立即更新",
+    handler: function() {
+      $ui.popToRoot();
+      updateScript()
+    }
+  }]:[{
+    title: "否",
+    handler: function() {
+      
+    }
+  },
+  {
+    title: "是",
+    handler: function() {
+      $ui.popToRoot();
+      updateScript()
+    }
+  }]
+  $ui.alert({
+    title: "发现新版本 V" + version,
+    message: "\n" + des + "\n\n是否更新？",
+    actions: actions
+  })
+}
+
+function updateScript() {
+  let url =
+    "https://github.com/gee1k/JSBox-addins/raw/master/Favorite/.output/Favorite.box?raw=true";
+  const scriptName = $addin.current.name;
+  let ui = require('scripts/ui')
+  if($("mainView")) {
+    ui.addProgressView($("mainView"), "开始更新...")
+  }
+  $http.download({
+    url: url,
+    showsProgress: false,
+    timeout: 5,
+    progress: function(bytesWritten, totalBytes) {
+      var percentage = bytesWritten * 1.0 / totalBytes
+      if($("myProgress")) {
+        $("myProgress").locations = [0.0, percentage, percentage]
+      }
+    },
+    handler: function(resp) {
+      let box = resp.data
+      $addin.save({
+        name: scriptName,
+        data: box,
+        handler: success => {
+          if (success) {
+            $cache.remove("lastCT")
+            $device.taptic(2)
+            $delay(0.2, function() {
+              $device.taptic(2)
+            })
+            if($("myProgressText")) {
+              $("myProgressText").text = "更新完成"
+            }
+            $delay(1, ()=>{
+              $addin.restart()
+            })
+          }
+        }
+      });
+    }
+  })
+}
+
+function needUpdate(nv, ov) {
+  let getVersionWeight = i => {
+    return i
+      .split(".")
+      .map(i => i * 1)
+      .reduce((s, i) => s * 100 + i);
+  };
+  return getVersionWeight(nv) > getVersionWeight(ov);
+}
+
+function checkUpdate(now) {
+  if(needCheckup() || now) {
+    getLatestBuild(now)
+  }
+}
+
+//需要检查更新？
+function needCheckup() {
+  let nDate = new Date()
+  let lastCT = $cache.get("lastCT")
+  if (lastCT == undefined) {
+    $cache.set("lastCT", nDate)
+    return true
+  } else {
+    let tdoa = (nDate.getTime() - lastCT.getTime()) / (60 * 1000)
+    let interval = 1440
+    if ($app.env == $env.app) {
+      interval = 1
+    }
+    $console.info("离下次检测更新: " + (interval - tdoa) + "  分钟")
+    if (tdoa > interval) {
+      $cache.set("lastCT", nDate)
+      return true
+    } else {
+      return false
     }
   }
-  if (a.length < b.length) return -1;
-  if (a.length > b.length) return 1;
-  var last1 = s1.charCodeAt(s1.length - 1) | 0x20,
-    last2 = s2.charCodeAt(s2.length - 1) | 0x20;
-  return last1 > last2 ? 1 : last1 < last2 ? -1 : 0;
 }
-
-// 不考虑字母
-function s2i(s) {
-  return s.split('').reduce(function (a, c) {
-    var code = c.charCodeAt(0);
-    if (48 <= code && code < 58) {
-      a.push(code - 48);
-    }
-    return a;
-  }, []).reduce(function (a, c) {
-    return 10 * a + c;
-  }, 0);
-}
-
 
 module.exports = {
-  checkForUpdates: checkForUpdates
+  checkUpdate: checkUpdate,
+  getCurVersion: getCurVersion,
+  getCurBuild: getCurBuild,
+  getCurDate: getCurDate,
 }
