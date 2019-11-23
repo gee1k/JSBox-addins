@@ -256,6 +256,7 @@ function blurAllInput() {
 function saveData(refreshUI) {
   blurAllInput()
   if (!isValidForm()) {
+    $device.taptic(2)
     return
   }
   let res = {
