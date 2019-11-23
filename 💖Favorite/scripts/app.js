@@ -1,0 +1,513 @@
+let settings = require('./settings')
+let _settingsConfig = $file.read('settings.json')
+const $SETTINGS = JSON.parse(_settingsConfig)
+
+let COLORS = $SETTINGS.colors.light
+// 当允许环境为今日小组件并且系统为暗色模式时，文字颜色才采取暗色模式配置
+// 否则在 JSBOX 应用内使用暗色模式配置将会看不清
+if ($app.env === $env.today && $device.isDarkMode) {
+  COLORS = $SETTINGS.colors.dark
+}
+
+const defaultImage = "assets/logo.png"
+
+// 读取配置缓存
+let config = getData()
+// 上一次的 config
+let _lastConfig = config
+
+// 请勿修改的变量
+let lastDate
+let timers = {}
+
+function init() {
+  
+  render()
+
+  // 首次打开时提示用户配置
+  let _firstSetup = $cache.get("_firstSetup")
+  if (!_firstSetup) {
+    $cache.set("_firstSetup", true)
+    $ui.toast("请点击右上角设置按钮配置相关信息!", 10)
+  }
+}
+
+function render () {
+
+  let imageWidth = 80
+  let imageHeight = 60
+
+
+  $ui.render({
+    props: {
+      title: "💖Favorite",
+      navButtons: [
+        {
+          icon: "002",
+          handler: function() {
+            settings.runSettings(refreshUI)
+          }
+        }
+      ]
+    },
+    events: {
+      // 界面加载后
+      appeared: function() {
+        refreshUI(true)
+        refreshTime()
+        refreshWeather() 
+        refreshBattery()
+
+        timers['time'] = $timer.schedule({
+          interval: 10,
+          handler: function() {
+            refreshTime()
+            refreshBattery()
+          }
+        });
+      },
+      dealloc: function() {
+        // 清理定时器
+        for(let key in timers) {
+          timers[key].invalidate()
+          delete timers[key]
+        }
+      }
+    },
+    views: [
+      {
+        type: "view",
+        props: {
+          id: "superView"
+        },
+        layout: function(make, view) {
+          make.left.right.inset(0)
+          make.height.equalTo(220)
+        },
+        views: [// 图片
+          {
+            type: "image",
+            props: {
+              id: "image",
+              image: config.image,
+              radius: 10,
+              contentMode: $contentMode.scaleAspectFill
+            },
+            layout: function(make, view) {
+              make.top.equalTo(10)
+              make.left.equalTo(10)
+              make.size.equalTo($size(imageWidth, imageHeight))
+            }
+          },
+          // 时间日期、纪念日 部分
+          {
+            type: "view",
+            layout: function(make, view) {
+              make.top.equalTo(10)
+              make.left.equalTo(imageWidth + 20)
+              make.height.equalTo(imageHeight)
+            },
+            views: [
+              // 第一行：时间、星期、农历开始
+              {
+                type: "label",
+                props: {
+                  id: "today-label",
+                  text: "今天是",
+                  align: $align.left,
+                  font: $font("GillSans", 14),
+                  textColor: $color(COLORS.timeLabel)
+                },
+                layout: function(make, view) {
+                  make.top.equalTo(0)
+                }
+              },
+              {
+                type: "label",
+                props: {
+                  id: "year",
+                  align: $align.left,
+                  font: $font("GillSans-Italic", 13),
+                  textColor: $color(COLORS.time)
+                },
+                layout: function(make, view) {
+                  make.left.equalTo($("today-label").right)
+                }
+              },
+              {
+                type: "label",
+                props: {
+                  id: "year-label",
+                  text: "年",
+                  align: $align.left,
+                  font: $font("GillSans", 14),
+                  textColor: $color(COLORS.timeLabel)
+                },
+                layout: function(make, view) {
+                  make.left.equalTo($("year").right)
+                }
+              },
+              {
+                type: "label",
+                props: {
+                  id: "month",
+                  align: $align.left,
+                  font: $font("GillSans-Italic", 13),
+                  textColor: $color(COLORS.time)
+                },
+                layout: function(make, view) {
+                  make.left.equalTo($("year-label").right)
+                }
+              },
+              {
+                type: "label",
+                props: {
+                  id: "month-label",
+                  text: "月",
+                  align: $align.left,
+                  font: $font("GillSans", 14),
+                  textColor: $color(COLORS.timeLabel)
+                },
+                layout: function(make, view) {
+                  make.left.equalTo($("month").right)
+                }
+              },
+              {
+                type: "label",
+                props: {
+                  id: "day",
+                  align: $align.left,
+                  font: $font("GillSans-Italic", 13),
+                  textColor: $color(COLORS.time)
+                },
+                layout: function(make, view) {
+                  make.left.equalTo($("month-label").right)
+                }
+              },
+              {
+                type: "label",
+                props: {
+                  id: "day-label",
+                  text: "日",
+                  align: $align.left,
+                  font: $font("GillSans", 14),
+                  textColor: $color(COLORS.timeLabel)
+                },
+                layout: function(make, view) {
+                  make.left.equalTo($("day").right)
+                }
+              },
+              // 星期
+              {
+                type: "label",
+                props: {
+                  id: "dayOfWeek",
+                  align: $align.left,
+                  font: $font("GillSans-Bold", 13),
+                  textColor: $color(COLORS.dayOfWeek)
+                },
+                layout: function(make, view) {
+                  make.left.equalTo($("day-label").right).offset(10)
+                }
+              },
+              // 农历
+              {
+                type: "label",
+                props: {
+                  id: "lunar",
+                  align: $align.left,
+                  font: $font("GillSans-Bold", 13),
+                  textColor: $color(COLORS.lunar)
+                },
+                layout: function(make, view) {
+                  make.left.equalTo($("dayOfWeek").right).offset(15)
+                }
+              },
+              // 第一行：时间、星期、农历结束
+              // 第二行：纪念日信息
+              {
+                type: "label",
+                props: {
+                  id: "commemorationDayText",
+                  text: config.commemorationDayText,
+                  align: $align.left,
+                  font: $font("GillSans-Bold", 16),
+                  textColor: $color(COLORS.commemorationDayText)
+                },
+                layout: function(make, view) {
+                  make.bottom.inset(10)
+                }
+              },
+              {
+                type: "label",
+                props: {
+                  id: "commemorationDay",
+                  align: $align.left,
+                  font: $font("GillSans-BoldItalic", 24),
+                  textColor: $color(COLORS.commemorationDay)
+                },
+                layout: function(make, view) {
+                  make.bottom.inset(5)
+                  make.left.equalTo($("lunar").right).offset(-65)
+                }
+              }
+              // 第二行：纪念日信息结束
+            ]
+          },
+          // 温度
+          {
+            type: "label",
+            props: {
+              id: "tmp",
+              align: $align.left,
+              font: $font("PingFangSC-Semibold", 14),
+              textColor: $color(COLORS.tmp)
+            },
+            layout: function(make, view) {
+              make.top.inset(imageHeight + 20)
+              make.left.inset(10)
+            }
+          },
+          // 天气图标
+          {
+            type: "image",
+            props: {
+              id: "weather-icon"
+            },
+            layout: function(make, view) {
+              let size = 20
+              make.size.equalTo($size(size, size))
+              make.top.inset(imageHeight + 20)
+              make.left.equalTo($("tmp").right).offset(3)
+            }
+          },
+          // 风向
+          {
+            type: "label",
+            props: {
+              id: "wind",
+              align: $align.left,
+              font: $font("PingFangSC-Semibold", 14),
+              textColor: $color(COLORS.wind)
+            },
+            layout: function(make, view) {
+              make.top.inset(80)
+              make.left.equalTo($("weather-icon").right).offset(3)
+            }
+          },
+          // 空气质量
+          {
+            type: "label",
+            props: {
+              id: "air",
+              align: $align.left,
+              font: $font("PingFangSC-Semibold", 14),
+              textColor: $color(COLORS.air)
+            },
+            layout: function(make, view) {
+              make.top.inset(80)
+              make.left.equalTo($("wind").right).offset(8)
+            }
+          },
+          // 电池状态
+          {
+            type: "label",
+            props: {
+              id: "betteryState",
+              align: $align.left,
+              font: $font("PingFangSC-Regular", 13),
+              textColor: $color(COLORS.betteryState)
+            },
+            layout: function(make, view) {
+              make.top.inset(80)
+              make.left.equalTo($("air").right).offset(20)
+            }
+          },
+          //电量
+          {
+            type: "label",
+            props: {
+              id: "betteryLevel",
+              align: $align.left,
+              font: $font("PingFangSC-Semibold", 14)
+            },
+            layout: function(make, view) {
+              make.top.inset(80)
+              make.left.equalTo($("betteryState").right)
+            }
+          }
+        ]
+      }
+    ]
+  });
+}
+
+/**
+ * 获取缓存配置
+ */
+function getData() {
+  let data = $cache.get("data")
+  return Object.assign({
+    commemorationDayText: "uPic 诞生 🤓",
+    commemorationDate: "2019-06-08",
+    heweatherKey: ""
+  }, data)
+}
+
+/**
+ * 检查配置是否变化，变化即更新视图
+ */
+function refreshUI(onlyImage) {
+  let tmp = getData()
+  if (tmp === _lastConfig) {
+    return
+  }
+  config = tmp
+
+  if (config.image) {
+    $('image').image = config.image
+  } else {
+    $('image').src = defaultImage
+  }
+
+  if (!onlyImage) {
+    $('commemorationDayText').text = config.commemorationDayText
+
+    if (config.commemorationDate !== _lastConfig.commemorationDate) {
+      refreshCommemorationDay()
+    }
+    
+    if (config.heweatherKey !== _lastConfig.heweatherKey) {
+      refreshWeather()
+    }
+  }
+  
+
+  _lastConfig = config
+}
+
+/**
+ * 更新时间日期、纪念日天数
+ */
+function refreshTime() {
+  let date = new Date()
+  let year = date.getFullYear()
+  let month = date.getMonth() + 1
+  let day = date.getDate()
+
+  // 判断日期是否改变
+  if (lastDate !== day) {
+    $('year').text = year
+    $('month').text = month
+    $('day').text = day
+
+    // 星期数
+    let dayStr = '星期'+'日一二三四五六'.charAt(date.getDay())
+    $('dayOfWeek').text = dayStr
+
+    $http.get({
+      url: "https://www.sojson.com/open/api/lunar/json.shtml",
+      handler: function(resp) {
+        let res = resp.data
+        if (res.status !== 200) {
+          console.info('Error -> ', res.message)
+          return
+        }
+        let data = res.data
+        $('lunar').text = `${data.cnmonth}月${data.cnday}`
+      }
+    })
+
+    refreshCommemorationDay()    
+  }
+  
+  lastDate = day
+}
+
+/**
+ * 刷新纪念日天数
+ */
+function refreshCommemorationDay() {
+  let date = new Date()
+  let d2 = new Date(config.commemorationDate)
+  // 纪念天数
+  let commemorationDay = Math.floor((date - d2) / 1000 / 60 / 60 / 24)
+  $('commemorationDay').text = `${commemorationDay}天`
+}
+
+/**
+ * 更新天气、空气质量
+ */
+function refreshWeather() {
+  // 天气
+  $http.get({
+    url: `https://free-api.heweather.net/s6/weather/now?location=auto_ip&key=${config.heweatherKey}`,
+    handler: function(resp) {
+      let res = resp.data
+      let data = res['HeWeather6'][0]
+      if (data.status !== 'ok' || !data.now) {
+        return
+      }
+      let weather = data.now
+      $('tmp').text = `${weather.tmp}°C`
+      $('weather-icon').src = `assets/weather/${weather.cond_code}.png`
+      $('wind').text = weather.wind_dir
+    }
+  })
+
+  // 空气质量
+  $http.get({
+    url: `https://free-api.heweather.net/s6/air/now?location=auto_ip&key=${config.heweatherKey}`,
+    handler: function(resp) {
+      let res = resp.data
+      let data = res['HeWeather6'][0]
+      if (data.status !== 'ok' || !data.air_now_city) {
+        return
+      }
+      let air = data.air_now_city
+      $('air').text = `${air.qlty} | AQI: ${air.aqi} | PM2.5: ${air.pm25}`
+    }
+  })
+}
+
+/**
+ * 更新电池信息
+ */
+function refreshBattery() {
+  let batteryInfo = $device.info['battery']
+
+  let betteryState = ''
+  switch(batteryInfo.state) {
+    case 2:
+        betteryState = '已充满'
+        break
+    case 2:
+        betteryState = '正在充电'
+        break
+    case 1:
+        betteryState = '正在放电'
+        break
+    default:
+        betteryState = '未知'
+  }
+  let batteryPower = COLORS.batteryPower
+
+  let betteryLevel = Math.ceil(batteryInfo.level * 100)
+  let batteryColor = batteryPower.high
+  // 判断是否是充电状态。state 为 2 时表示充电中
+  if (batteryInfo.state !== 2) {
+    if (betteryLevel <= 20) {
+      batteryColor = batteryPower.low
+    } else if (betteryLevel <= 40) {
+      batteryColor = $app.env === $env.today ? batteryPower.medium : 'black'
+    }
+  }
+
+  $('betteryState').text = `${betteryState}: `
+  $('betteryLevel').text = `${betteryLevel}%`
+  $('betteryLevel').textColor = $color(batteryColor)
+}
+
+module.exports = {
+  init: init 
+}

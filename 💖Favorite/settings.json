@@ -1,0 +1,38 @@
+{
+  "colors": {
+    "light": {
+      "timeLabel": "#333333",
+      "time": "#333333",
+      "dayOfWeek": "#333333",
+      "lunar": "#333333",
+      "commemorationDayText": "#333333",
+      "commemorationDay": "#333333",
+      "tmp": "#333333",
+      "wind": "#333333",
+      "air": "#333333",
+      "betteryState": "#333333",
+      "batteryPower": {
+        "low": "red",
+        "medium": "yellow",
+        "high": "green"
+      }
+    },
+    "dark": {
+      "timeLabel": "#FFFFFF",
+      "time": "#FFFFFF",
+      "dayOfWeek": "#FFFFFF",
+      "lunar": "#FFFFFF",
+      "commemorationDayText": "#FFFFFF",
+      "commemorationDay": "#FFFFFF",
+      "tmp": "#FFFFFF",
+      "wind": "#FFFFFF",
+      "air": "#FFFFFF",
+      "betteryState": "#FFFFFF",
+      "batteryPower": {
+        "low": "red",
+        "medium": "yellow",
+        "high": "green"
+      }
+    }
+  }
+}

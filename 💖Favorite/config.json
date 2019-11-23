@@ -1,0 +1,24 @@
+{
+  "widget" : {
+    "staticSize" : true,
+    "tintColor" : "",
+    "height" : 220,
+    "iconColor" : ""
+  },
+  "info" : {
+    "types" : 2,
+    "author" : "Svend<svend.jin@gmail.com>",
+    "website" : "https:\/\/svend.cc",
+    "name" : "💖Favorite",
+    "url" : "",
+    "version" : "1.1.1"
+  },
+  "settings" : {
+    "minOSVer" : "10.0.0",
+    "minSDKVer" : "1.0.0",
+    "rotateDisabled" : false,
+    "autoKeyboardEnabled" : false,
+    "keyboardToolbarEnabled" : false,
+    "idleTimerDisabled" : false
+  }
+}
