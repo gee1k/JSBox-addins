@@ -145,23 +145,24 @@ function checkUpdate(now) {
 function needCheckup() {
   let nDate = new Date()
   let lastCT = $cache.get("lastCT")
-  if (lastCT == undefined) {
-    $cache.set("lastCT", nDate)
-    return true
-  } else {
-    let tdoa = (nDate.getTime() - lastCT.getTime()) / (60 * 1000)
-    let interval = 1440
-    if ($app.env == $env.app) {
-      interval = 1
-    }
-    $console.info("离下次检测更新: " + (interval - tdoa) + "  分钟")
-    if (tdoa > interval) {
-      $cache.set("lastCT", nDate)
-      return true
-    } else {
-      return false
-    }
-  }
+  return true
+  // if (lastCT == undefined) {
+  //   $cache.set("lastCT", nDate)
+  //   return true
+  // } else {
+  //   let tdoa = (nDate.getTime() - lastCT.getTime()) / (60 * 1000)
+  //   let interval = 1440
+  //   if ($app.env == $env.app) {
+  //     interval = 1
+  //   }
+  //   $console.info("离下次检测更新: " + (interval - tdoa) + "  分钟")
+  //   if (tdoa > interval) {
+  //     $cache.set("lastCT", nDate)
+  //     return true
+  //   } else {
+  //     return false
+  //   }
+  // }
 }
 
 module.exports = {
