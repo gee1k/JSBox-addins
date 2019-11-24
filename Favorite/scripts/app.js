@@ -465,7 +465,7 @@ function refreshCommemorationDay() {
   let date = new Date()
   let d2 = new Date(config.commemorationDate)
   // 纪念天数
-  let commemorationDay = Math.floor((date - d2) / 1000 / 60 / 60 / 24)
+  let commemorationDay = Math.abs(Math.floor((date - d2) / 1000 / 60 / 60 / 24))
   $('commemorationDay').text = `${commemorationDay}天`
 }
 
