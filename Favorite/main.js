@@ -1,6 +1,5 @@
 let app = require('./scripts/app')
 let update = require('./scripts/update')
-// $ui.toast("初始化")
 app.init()
 
 if ($app.env === $env.app) {
