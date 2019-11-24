@@ -133,9 +133,9 @@ function needUpdate(nv, ov) {
 }
 
 function checkUpdate(now) {
-  // if(needCheckup() || now) {
+  if(needCheckup() || now) {
     getLatestBuild(now)
-  // }
+  }
 }
 
 //需要检查更新？
