@@ -28,7 +28,7 @@ function init() {
 
   // 首次打开时提示用户配置
   let _firstSetup = $cache.get("_firstSetup")
-  if (!_firstSetup) {
+  if (!_firstSetup && $app.env === $env.app) {
     $cache.set("_firstSetup", true)
     $ui.toast("请点击右上角设置按钮配置相关信息!", 10)
   }
@@ -38,7 +38,6 @@ function render () {
 
   let imageWidth = 80
   let imageHeight = 60
-
 
   $ui.render({
     props: {
@@ -56,6 +55,7 @@ function render () {
       // 界面加载后
       appeared: function() {
         refreshUI(true)
+
         refreshTime()
         refreshWeather() 
         refreshBattery()
@@ -473,6 +473,16 @@ function refreshCommemorationDay() {
  * 更新天气、空气质量
  */
 function refreshWeather() {
+  let last_weather = $cache.get("last_weather")
+  if (last_weather) {
+    renderWeather(last_weather)
+  }
+
+  let last_air = $cache.get("last_air")
+  if (last_air) {
+    renderAir(last_air)
+  }
+
   // 天气
   $http.get({
     url: `https://free-api.heweather.net/s6/weather/now?location=auto_ip&key=${config.heweatherKey}`,
@@ -483,9 +493,8 @@ function refreshWeather() {
         return
       }
       let weather = data.now
-      $('tmp').text = `${weather.tmp}°C`
-      $('weather-icon').src = `assets/weather/${weather.cond_code}.png`
-      $('wind').text = weather.wind_dir
+      renderWeather(weather)
+      $cache.set("last_weather")
     }
   })
 
@@ -499,9 +508,20 @@ function refreshWeather() {
         return
       }
       let air = data.air_now_city
-      $('air').text = `${air.qlty} | AQI: ${air.aqi} | PM2.5: ${air.pm25}`
+      renderAir(air)
+      $cache.set("last_air")
     }
   })
+}
+
+function renderWeather(weather) {
+  $('tmp').text = `${weather.tmp}°C`
+  $('weather-icon').src = `assets/weather/${weather.cond_code}.png`
+  $('wind').text = weather.wind_dir
+}
+
+function renderAir(air) {
+  $('air').text = `${air.qlty} | AQI: ${air.aqi} | PM2.5: ${air.pm25}`
 }
 
 /**
