@@ -19,7 +19,7 @@ function getCurDate() {
 
 function getLatestBuild(now) {
   $http.download({
-    url: "https://raw.githubusercontent.com/gee1k/JSBox-addins/master/Favorite/app.json",
+    url: `https://raw.githubusercontent.com/gee1k/JSBox-addins/master/Favorite/app.json?t=${Date.now()}`,
     showsProgress: false,
     timeout: 5,
     handler: function(resp) {
@@ -33,7 +33,7 @@ function getLatestBuild(now) {
         let force = appJson.force
         if(updateBuild > currentBuild) {
           $http.download({
-            url: "https://raw.githubusercontent.com/gee1k/JSBox-addins/master/Favorite/updateDetail.md",
+            url: `https://raw.githubusercontent.com/gee1k/JSBox-addins/master/Favorite/updateDetail.md?t=${Date.now()}`,
             showsProgress: false,
             timeout: 5,
             handler: function(resp) {
@@ -82,7 +82,7 @@ function sureToUpdate(version, des, force) {
 
 function updateScript() {
   let url =
-    "https://github.com/gee1k/JSBox-addins/raw/master/Favorite/.output/Favorite.box?raw=true";
+    `https://github.com/gee1k/JSBox-addins/raw/master/Favorite/.output/Favorite.box?raw=true&t=${Date.now()}`;
   const scriptName = $addin.current.name;
   if($("superView")) {
     ui.addProgressView($("superView"), "开始更新...")
