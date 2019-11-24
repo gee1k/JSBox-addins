@@ -291,7 +291,7 @@ function render () {
                   autoFontSize: true
                 },
                 layout: function(make, view) {
-                  make.width.equalTo(screen.width * 0.055)
+                  make.width.equalTo(screen.width * 0.07)
                   make.left.equalTo($("weather-icon").right)
                 }
               },
@@ -306,7 +306,7 @@ function render () {
                   autoFontSize: true
                 },
                 layout: function(make, view) {
-                  make.width.equalTo(screen.width * 0.4)
+                  make.width.equalTo(screen.width * 0.38)
                   make.left.equalTo($("wind").right).offset(5)
                 }
               },
@@ -519,7 +519,7 @@ function refreshBattery() {
   }
   let batteryPower = COLORS.batteryPower
 
-  let betteryLevel = Math.floor(batteryInfo.level * 100)
+  let betteryLevel = Math.round(batteryInfo.level * 100)
   let batteryColor = batteryPower.high
   // 判断是否是充电状态。state 为 2 时表示充电中
   if (batteryInfo.state !== 2) {
