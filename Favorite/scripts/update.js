@@ -1,23 +1,19 @@
 let ui = require('./ui')
 
+let appInfo = $file.exists("app.json") ? JSON.parse($file.read("app.json").string) : {}
+
 function getCurVersion() {
-  let version = $file.exists("app.json")
-    ? JSON.parse($file.read("app.json").string).version
-    : "0.0.0";
+  let version = appInfo.version || "0.0.0"
   return version;
 }
 
 function getCurBuild() {
-  let build = $file.exists("app.json")
-    ? JSON.parse($file.read("app.json").string).build
-    : "0";
+  let build = appInfo.build || "0";
   return build;
 }
 
 function getCurDate() {
-  let date = $file.exists("app.json")
-    ? JSON.parse($file.read("app.json").string).date
-    : "000000";
+  let date = appInfo.date || "000000";
   return date;
 }
 
@@ -29,10 +25,13 @@ function getLatestBuild(now) {
     handler: function(resp) {
       if(resp.data) {
         let appJson = JSON.parse(resp.data.string)
-        let updateBuild = appJson.build
+        let updateBuild = parseInt(appJson.build)
         let updateVersion = appJson.version
+        let currentBuild = parseInt(getCurBuild())
+        console.info(`当前 Build：${currentBuild}`)
+        console.info(`最新 Build：${updateBuild}`)
         let force = appJson.force
-        if(parseInt(updateBuild) > parseInt(getCurBuild())) {
+        if(updateBuild > currentBuild) {
           $http.download({
             url: "https://raw.githubusercontent.com/gee1k/JSBox-addins/master/Favorite/updateDetail.md",
             showsProgress: false,
@@ -134,9 +133,9 @@ function needUpdate(nv, ov) {
 }
 
 function checkUpdate(now) {
-  if(needCheckup() || now) {
+  // if(needCheckup() || now) {
     getLatestBuild(now)
-  }
+  // }
 }
 
 //需要检查更新？

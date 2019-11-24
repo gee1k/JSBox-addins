@@ -1,6 +1,6 @@
 let settings = require('./settings')
 let _settingsConfig = $file.read('settings.json')
-const $SETTINGS = JSON.parse(_settingsConfig)
+const $SETTINGS = JSON.parse(_settingsConfig.string)
 
 let COLORS = $SETTINGS.colors.light
 // 当允许环境为今日小组件并且系统为暗色模式时，文字颜色才采取暗色模式配置
@@ -19,6 +19,8 @@ let _lastConfig = config
 // 请勿修改的变量
 let lastDate
 let timers = {}
+
+const screen = $device.info["screen"]
 
 function init() {
   
@@ -106,6 +108,7 @@ function render () {
               make.top.equalTo(10)
               make.left.equalTo(imageWidth + 20)
               make.height.equalTo(imageHeight)
+              make.right.inset(15)
             },
             views: [
               // 第一行：时间、星期、农历开始
@@ -204,10 +207,12 @@ function render () {
                   id: "dayOfWeek",
                   align: $align.left,
                   font: $font("GillSans-Bold", 13),
-                  textColor: $color(COLORS.dayOfWeek)
+                  textColor: $color(COLORS.dayOfWeek),
+                  autoFontSize: true
                 },
                 layout: function(make, view) {
-                  make.left.equalTo($("day-label").right).offset(10)
+                  make.width.equalTo(screen.width * 0.14)
+                  make.left.equalTo($("day-label").right).offset(20)
                 }
               },
               // 农历
@@ -217,10 +222,13 @@ function render () {
                   id: "lunar",
                   align: $align.left,
                   font: $font("GillSans-Bold", 13),
-                  textColor: $color(COLORS.lunar)
+                  textColor: $color(COLORS.lunar),
+                  autoFontSize: true
                 },
                 layout: function(make, view) {
-                  make.left.equalTo($("dayOfWeek").right).offset(15)
+                  make.width.equalTo(screen.width * 0.17)
+                  // make.left.equalTo($("dayOfWeek").right).offset(15)
+                  make.right.inset(0)
                 }
               },
               // 第一行：时间、星期、农历结束
@@ -232,9 +240,11 @@ function render () {
                   text: config.commemorationDayText,
                   align: $align.left,
                   font: $font("GillSans-Bold", 16),
-                  textColor: $color(COLORS.commemorationDayText)
+                  textColor: $color(COLORS.commemorationDayText),
+                  autoFontSize: true
                 },
                 layout: function(make, view) {
+                  make.width.equalTo(screen.width * 0.7)
                   make.bottom.inset(10)
                 }
               },
@@ -244,97 +254,121 @@ function render () {
                   id: "commemorationDay",
                   align: $align.left,
                   font: $font("GillSans-BoldItalic", 24),
-                  textColor: $color(COLORS.commemorationDay)
+                  textColor: $color(COLORS.commemorationDay),
+                  autoFontSize: true
                 },
                 layout: function(make, view) {
                   make.bottom.inset(5)
-                  make.left.equalTo($("lunar").right).offset(-65)
+                  make.right.inset(0)
                 }
               }
               // 第二行：纪念日信息结束
             ]
           },
-          // 温度
           {
-            type: "label",
-            props: {
-              id: "tmp",
-              align: $align.left,
-              font: $font("PingFangSC-Semibold", 14),
-              textColor: $color(COLORS.tmp)
-            },
+            type: "view",
             layout: function(make, view) {
               make.top.inset(imageHeight + 20)
               make.left.inset(10)
-            }
-          },
-          // 天气图标
-          {
-            type: "image",
-            props: {
-              id: "weather-icon"
+              make.right.inset(15)
             },
-            layout: function(make, view) {
-              let size = 20
-              make.size.equalTo($size(size, size))
-              make.top.inset(imageHeight + 20)
-              make.left.equalTo($("tmp").right).offset(3)
-            }
-          },
-          // 风向
-          {
-            type: "label",
-            props: {
-              id: "wind",
-              align: $align.left,
-              font: $font("PingFangSC-Semibold", 14),
-              textColor: $color(COLORS.wind)
-            },
-            layout: function(make, view) {
-              make.top.inset(80)
-              make.left.equalTo($("weather-icon").right).offset(3)
-            }
-          },
-          // 空气质量
-          {
-            type: "label",
-            props: {
-              id: "air",
-              align: $align.left,
-              font: $font("PingFangSC-Semibold", 14),
-              textColor: $color(COLORS.air)
-            },
-            layout: function(make, view) {
-              make.top.inset(80)
-              make.left.equalTo($("wind").right).offset(8)
-            }
-          },
-          // 电池状态
-          {
-            type: "label",
-            props: {
-              id: "betteryState",
-              align: $align.left,
-              font: $font("PingFangSC-Regular", 13),
-              textColor: $color(COLORS.betteryState)
-            },
-            layout: function(make, view) {
-              make.top.inset(80)
-              make.left.equalTo($("air").right).offset(20)
-            }
-          },
-          //电量
-          {
-            type: "label",
-            props: {
-              id: "betteryLevel",
-              align: $align.left,
-              font: $font("PingFangSC-Semibold", 14)
-            },
-            layout: function(make, view) {
-              make.top.inset(80)
-              make.left.equalTo($("betteryState").right)
-            }
+            views: [
+              // 温度
+              {
+                type: "label",
+                props: {
+                  id: "tmp",
+                  align: $align.left,
+                  font: $font("PingFangSC-Semibold", 14),
+                  textColor: $color(COLORS.tmp),
+                  autoFontSize: true
+                },
+                layout: function(make, view) {
+                  make.width.equalTo(screen.width * 0.08)
+                }
+              },
+              // 天气图标
+              {
+                type: "image",
+                props: {
+                  id: "weather-icon",
+                  contentMode: $contentMode.scaleAspectFit
+                },
+                layout: function(make, view) {
+                  let size = screen.width * 0.05
+                  make.size.equalTo($size(size, size))
+                  make.bottom.inset(-(size * (350 / screen.width)))
+                  make.left.equalTo($("tmp").right).offset(3)
+                }
+              },
+              // 风向
+              {
+                type: "label",
+                props: {
+                  id: "wind",
+                  align: $align.left,
+                  font: $font("PingFangSC-Semibold", 14),
+                  textColor: $color(COLORS.wind),
+                  autoFontSize: true
+                },
+                layout: function(make, view) {
+                  make.width.equalTo(screen.width * 0.1)
+                  make.left.equalTo($("weather-icon").right).offset(3)
+                }
+              },
+              // 空气质量
+              {
+                type: "label",
+                props: {
+                  id: "air",
+                  align: $align.left,
+                  font: $font("PingFangSC-Semibold", 14),
+                  textColor: $color(COLORS.air),
+                  autoFontSize: true
+                },
+                layout: function(make, view) {
+                  make.width.equalTo(screen.width * 0.37)
+                  make.left.equalTo($("wind").right).offset(8)
+                }
+              },
+              {
+                type: "view",
+                layout: function(make, view){
+                  make.right.inset(0)
+                },
+                views: [
+                  // 电池状态
+                  {
+                    type: "label",
+                    props: {
+                      id: "betteryState",
+                      align: $align.left,
+                      font: $font("PingFangSC-Regular", 13),
+                      textColor: $color(COLORS.betteryState),
+                      autoFontSize: true
+                    },
+                    layout: function(make, view) {
+                      make.width.equalTo(screen.width * 0.13)
+                      make.right.inset(35)
+                    }
+                  },
+                  //电量
+                  {
+                    type: "label",
+                    props: {
+                      id: "betteryLevel",
+                      align: $align.left,
+                      font: $font("PingFangSC-Semibold", 14),
+                      autoFontSize: true
+                    },
+                    layout: function(make, view) {
+                      make.width.equalTo(screen.width * 0.10)
+                      make.left.equalTo($("betteryState").right)
+                    }
+                  }
+                ]
+              }
+            ]
           }
         ]
       }
