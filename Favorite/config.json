@@ -1,12 +1,12 @@
 {
   "widget" : {
-    "staticSize" : true,
+    "staticSize" : false,
     "tintColor" : "",
-    "height" : 220,
+    "height" : 0,
     "iconColor" : ""
   },
   "info" : {
-    "types" : 2,
+    "types" : 0,
     "author" : "Svend<svend.jin@gmail.com>",
     "website" : "https:\/\/svend.cc",
     "name" : "Favorite",

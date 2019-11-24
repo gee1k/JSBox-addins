@@ -209,13 +209,12 @@ function runSettings(refreshUI) {
 
 // 读取配置并渲染
 function renderData() {
-  // 读取配置缓存
-  let cacheData = $cache.get("data")
-
   if (!$('settings_image')) {
     renderingFailed = true
     return
   }
+  // 读取配置缓存
+  let cacheData = $cache.get("data")
 
   if (cacheData) {
     if (cacheData.image) {
@@ -259,8 +258,13 @@ function saveData(refreshUI) {
     $device.taptic(2)
     return
   }
+
+  let originalImage = $('settings_image').image
+  let resizeWidth = 400
+  let resizeHeight = originalImage.size.height / (originalImage.size.width / resizeWidth)
+  var resizedImage = originalImage.resized($size(resizeWidth, resizeHeight))
   let res = {
-    image: $('settings_image').image,
+    image: resizedImage,
     commemorationDayText: $('settings_commemorationDayText').text,
     commemorationDate: $('settings_commemorationDayButton').info.date,
     heweatherKey: $('settings_heweatherKey').text

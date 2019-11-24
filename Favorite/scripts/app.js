@@ -18,20 +18,14 @@ let _lastConfig = config
 
 // 请勿修改的变量
 let lastDate
-let timers = {}
+let renderingFailed = false
 
 const screen = $device.info["screen"]
 
 function init() {
-  
   render()
-
-  // 首次打开时提示用户配置
-  let _firstSetup = $cache.get("_firstSetup")
-  if (!_firstSetup && $app.env === $env.app) {
-    $cache.set("_firstSetup", true)
-    $ui.toast("请点击右上角设置按钮配置相关信息!", 10)
-  }
+  
+  initData()
 }
 
 function render () {
@@ -54,25 +48,9 @@ function render () {
     events: {
       // 界面加载后
       appeared: function() {
-        refreshUI(true)
-
-        refreshTime()
-        refreshWeather() 
-        refreshBattery()
-
-        timers['time'] = $timer.schedule({
-          interval: 10,
-          handler: function() {
-            refreshTime()
-            refreshBattery()
-          }
-        });
-      },
-      dealloc: function() {
-        // 清理定时器
-        for(let key in timers) {
-          timers[key].invalidate()
-          delete timers[key]
+        if (renderingFailed) {
+          initData()
+          renderingFailed = false
         }
       }
     },
@@ -86,12 +64,13 @@ function render () {
           make.left.right.inset(0)
           make.height.equalTo(220)
         },
-        views: [// 图片
+        views: [
+          // 图片
           {
             type: "image",
             props: {
               id: "image",
-              image: config.image,
+              image: config.image || $image(defaultImage),
               radius: 10,
               contentMode: $contentMode.scaleAspectFill
             },
@@ -206,13 +185,13 @@ function render () {
                 props: {
                   id: "dayOfWeek",
                   align: $align.left,
-                  font: $font("GillSans-Bold", 13),
+                  font: $font("GillSans", 13),
                   textColor: $color(COLORS.dayOfWeek),
                   autoFontSize: true
                 },
                 layout: function(make, view) {
                   make.width.equalTo(screen.width * 0.14)
-                  make.left.equalTo($("day-label").right).offset(20)
+                  make.left.equalTo($("day-label").right).offset(10)
                 }
               },
               // 农历
@@ -221,12 +200,12 @@ function render () {
                 props: {
                   id: "lunar",
                   align: $align.left,
-                  font: $font("GillSans-Bold", 13),
+                  font: $font("GillSans", 13),
                   textColor: $color(COLORS.lunar),
                   autoFontSize: true
                 },
                 layout: function(make, view) {
-                  make.width.equalTo(screen.width * 0.17)
+                  make.width.equalTo(screen.width * 0.13)
                   // make.left.equalTo($("dayOfWeek").right).offset(15)
                   make.right.inset(0)
                 }
@@ -279,7 +258,7 @@ function render () {
                 props: {
                   id: "tmp",
                   align: $align.left,
-                  font: $font("PingFangSC-Semibold", 14),
+                  font: $font("PingFangSC", 14),
                   textColor: $color(COLORS.tmp),
                   autoFontSize: true
                 },
@@ -307,7 +286,7 @@ function render () {
                 props: {
                   id: "wind",
                   align: $align.left,
-                  font: $font("PingFangSC-Semibold", 14),
+                  font: $font("PingFangSC", 14),
                   textColor: $color(COLORS.wind),
                   autoFontSize: true
                 },
@@ -322,7 +301,7 @@ function render () {
                 props: {
                   id: "air",
                   align: $align.left,
-                  font: $font("PingFangSC-Semibold", 14),
+                  font: $font("PingFangSC", 14),
                   textColor: $color(COLORS.air),
                   autoFontSize: true
                 },
@@ -373,7 +352,7 @@ function render () {
         ]
       }
     ]
-  });
+  })
 }
 
 /**
@@ -391,29 +370,23 @@ function getData() {
 /**
  * 检查配置是否变化，变化即更新视图
  */
-function refreshUI(onlyImage) {
+function refreshUI() {
   let tmp = getData()
   if (tmp === _lastConfig) {
     return
   }
   config = tmp
 
-  if (config.image) {
-    $('image').image = config.image
-  } else {
-    $('image').src = defaultImage
+  $('image').image = config.image || $image(defaultImage)
+
+  $('commemorationDayText').text = config.commemorationDayText
+
+  if (config.commemorationDate !== _lastConfig.commemorationDate) {
+    refreshCommemorationDay()
   }
-
-  if (!onlyImage) {
-    $('commemorationDayText').text = config.commemorationDayText
-
-    if (config.commemorationDate !== _lastConfig.commemorationDate) {
-      refreshCommemorationDay()
-    }
-    
-    if (config.heweatherKey !== _lastConfig.heweatherKey) {
-      refreshWeather()
-    }
+  
+  if (config.heweatherKey !== _lastConfig.heweatherKey) {
+    refreshWeather()
   }
   
 
@@ -494,7 +467,7 @@ function refreshWeather() {
       }
       let weather = data.now
       renderWeather(weather)
-      $cache.set("last_weather")
+      $cache.set("last_weather", weather)
     }
   })
 
@@ -509,7 +482,7 @@ function refreshWeather() {
       }
       let air = data.air_now_city
       renderAir(air)
-      $cache.set("last_air")
+      $cache.set("last_air", air)
     }
   })
 }
@@ -546,13 +519,13 @@ function refreshBattery() {
   }
   let batteryPower = COLORS.batteryPower
 
-  let betteryLevel = Math.ceil(batteryInfo.level * 100)
+  let betteryLevel = Math.floor(batteryInfo.level * 100)
   let batteryColor = batteryPower.high
   // 判断是否是充电状态。state 为 2 时表示充电中
   if (batteryInfo.state !== 2) {
     if (betteryLevel <= 20) {
       batteryColor = batteryPower.low
-    } else if (betteryLevel <= 40) {
+    } else if (betteryLevel < 50) {
       batteryColor = $app.env === $env.today ? batteryPower.medium : 'black'
     }
   }
@@ -560,6 +533,29 @@ function refreshBattery() {
   $('betteryState').text = `${betteryState}: `
   $('betteryLevel').text = `${betteryLevel}%`
   $('betteryLevel').textColor = $color(batteryColor)
+}
+
+function initData() {
+  if (!$('year') || !$('betteryLevel')) {
+    console.log('===')
+    renderingFailed = true
+    return
+  }
+  // 初始化信息
+  refreshTime()
+  refreshWeather() 
+  refreshBattery()
+
+  $timer.schedule({
+    interval: 10,
+    handler: function() {
+      if (!$('year') || !$('betteryLevel')) {
+        return
+      }
+      refreshTime()
+      refreshBattery()
+    }
+  });
 }
 
 module.exports = {
