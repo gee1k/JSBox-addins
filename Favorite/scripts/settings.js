@@ -186,7 +186,7 @@ function runSettings(refreshUI) {
         props: {
           id: "settings_saveButton",
           title: "保存",
-          userInteractionEnabled: false
+          enabled: false
         },
         layout: function(make, view) {
           make.left.right.inset(20) 
@@ -237,7 +237,7 @@ function renderData() {
   }
 
   // 启用保存按钮
-  $("settings_saveButton").userInteractionEnabled = true
+  $("settings_saveButton").enabled = true
   $("settings_saveButton").bgcolor = $("settings_saveButton")._originBgcolor
 }
 
