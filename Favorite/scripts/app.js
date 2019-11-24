@@ -258,7 +258,7 @@ function render () {
                 props: {
                   id: "tmp",
                   align: $align.left,
-                  font: $font("PingFangSC", 14),
+                  font: $font("PingFangSC", 13),
                   textColor: $color(COLORS.tmp),
                   autoFontSize: true
                 },
@@ -276,8 +276,8 @@ function render () {
                 layout: function(make, view) {
                   let size = screen.width * 0.05
                   make.size.equalTo($size(size, size))
-                  make.bottom.inset(-(size * (370 / screen.width)))
-                  make.left.equalTo($("tmp").right).offset(3)
+                  make.bottom.inset(-(size * (400 / screen.width)))
+                  make.left.equalTo($("tmp").right)
                 }
               },
               // 风向
@@ -286,13 +286,13 @@ function render () {
                 props: {
                   id: "wind",
                   align: $align.left,
-                  font: $font("PingFangSC", 14),
+                  font: $font("PingFangSC", 13),
                   textColor: $color(COLORS.wind),
                   autoFontSize: true
                 },
                 layout: function(make, view) {
-                  make.width.equalTo(screen.width * 0.065)
-                  make.left.equalTo($("weather-icon").right).offset(3)
+                  make.width.equalTo(screen.width * 0.055)
+                  make.left.equalTo($("weather-icon").right)
                 }
               },
               // 空气质量
@@ -301,12 +301,12 @@ function render () {
                 props: {
                   id: "air",
                   align: $align.left,
-                  font: $font("PingFangSC", 14),
+                  font: $font("PingFangSC", 13),
                   textColor: $color(COLORS.air),
                   autoFontSize: true
                 },
                 layout: function(make, view) {
-                  make.width.equalTo(screen.width * 0.45)
+                  make.width.equalTo(screen.width * 0.4)
                   make.left.equalTo($("wind").right).offset(5)
                 }
               },
