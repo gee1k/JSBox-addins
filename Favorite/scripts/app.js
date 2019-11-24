@@ -70,7 +70,7 @@ function render () {
             type: "image",
             props: {
               id: "image",
-              image: config.image || $image(defaultImage),
+              image: config.image || $data({ path: defaultImage }).image,
               radius: 10,
               contentMode: $contentMode.scaleAspectFill
             },
@@ -377,7 +377,7 @@ function refreshUI() {
   }
   config = tmp
 
-  $('image').image = config.image || $image(defaultImage)
+  $('image').image = config.image || $data({ path: defaultImage }).image
 
   $('commemorationDayText').text = config.commemorationDayText
 
