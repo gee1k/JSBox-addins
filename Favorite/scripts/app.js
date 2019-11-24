@@ -276,7 +276,7 @@ function render () {
                 layout: function(make, view) {
                   let size = screen.width * 0.05
                   make.size.equalTo($size(size, size))
-                  make.bottom.inset(-(size * (350 / screen.width)))
+                  make.bottom.inset(-(size * (370 / screen.width)))
                   make.left.equalTo($("tmp").right).offset(3)
                 }
               },
@@ -291,7 +291,7 @@ function render () {
                   autoFontSize: true
                 },
                 layout: function(make, view) {
-                  make.width.equalTo(screen.width * 0.1)
+                  make.width.equalTo(screen.width * 0.065)
                   make.left.equalTo($("weather-icon").right).offset(3)
                 }
               },
@@ -306,8 +306,8 @@ function render () {
                   autoFontSize: true
                 },
                 layout: function(make, view) {
-                  make.width.equalTo(screen.width * 0.37)
-                  make.left.equalTo($("wind").right).offset(8)
+                  make.width.equalTo(screen.width * 0.45)
+                  make.left.equalTo($("wind").right).offset(5)
                 }
               },
               {
