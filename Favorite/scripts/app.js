@@ -532,7 +532,7 @@ function refreshBattery() {
 
   let betteryState = ''
   switch(batteryInfo.state) {
-    case 2:
+    case 3:
         betteryState = '已充满'
         break
     case 2:
