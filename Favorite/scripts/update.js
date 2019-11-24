@@ -104,7 +104,6 @@ function updateScript() {
         data: box,
         handler: success => {
           if (success) {
-            $cache.remove("lastCT")
             $device.taptic(2)
             $delay(0.2, function() {
               $device.taptic(2)
@@ -122,44 +121,10 @@ function updateScript() {
   })
 }
 
-function needUpdate(nv, ov) {
-  let getVersionWeight = i => {
-    return i
-      .split(".")
-      .map(i => i * 1)
-      .reduce((s, i) => s * 100 + i);
-  };
-  return getVersionWeight(nv) > getVersionWeight(ov);
-}
-
 function checkUpdate(now) {
-  if(needCheckup() || now) {
-    getLatestBuild(now)
-  }
+  getLatestBuild(now)
 }
 
-//需要检查更新？
-function needCheckup() {
-  let nDate = new Date()
-  let lastCT = $cache.get("lastCT")
-  if (lastCT == undefined) {
-    $cache.set("lastCT", nDate)
-    return true
-  } else {
-    let tdoa = (nDate.getTime() - lastCT.getTime()) / (60 * 1000)
-    let interval = 1440
-    if ($app.env == $env.app) {
-      interval = 1
-    }
-    $console.info("离下次检测更新: " + (interval - tdoa) + "  分钟")
-    if (tdoa > interval) {
-      $cache.set("lastCT", nDate)
-      return true
-    } else {
-      return false
-    }
-  }
-}
 
 module.exports = {
   checkUpdate: checkUpdate,
