@@ -18,34 +18,36 @@ function getCurDate() {
 }
 
 function getLatestBuild(now) {
-  $http.download({
+  $http.get({
     url: `https://raw.githubusercontent.com/gee1k/JSBox-addins/master/Favorite/app.json?t=${Date.now()}`,
     showsProgress: false,
     timeout: 5,
     handler: function(resp) {
-      if(resp.data) {
-        let appJson = JSON.parse(resp.data.string)
-        let updateBuild = parseInt(appJson.build)
-        let updateVersion = appJson.version
-        let currentBuild = parseInt(getCurBuild())
-        console.info(`当前 Build：${currentBuild}`)
-        console.info(`最新 Build：${updateBuild}`)
-        let force = appJson.force
-        if(updateBuild > currentBuild) {
-          $http.download({
-            url: `https://raw.githubusercontent.com/gee1k/JSBox-addins/master/Favorite/updateDetail.md?t=${Date.now()}`,
-            showsProgress: false,
-            timeout: 5,
-            handler: function(resp) {
-              if(resp.data) {
-                sureToUpdate(updateVersion, resp.data.string, force)
-              }
+      let appJson = resp.data
+      if (!appJson || resp.error || resp.response.statusCode !== 200) {
+        $ui.toast("下载更新包失败,请稍后再试！")
+        return
+      }
+      let updateBuild = parseInt(appJson.build)
+      let updateVersion = appJson.version
+      let currentBuild = parseInt(getCurBuild())
+      console.info(`当前 Build：${currentBuild}`)
+      console.info(`最新 Build：${updateBuild}`)
+      let force = appJson.force
+      if(updateBuild > currentBuild) {
+        $http.get({
+          url: `https://raw.githubusercontent.com/gee1k/JSBox-addins/master/Favorite/updateDetail.md?t=${Date.now()}`,
+          showsProgress: false,
+          timeout: 5,
+          handler: function(resp2) {
+            if(resp2.data) {
+              sureToUpdate(updateVersion, resp2.data, force)
             }
-          })
-        } else {
-          if(now && $("superView")) {
-            ui.showToastView($("superView"), "blue", "当前版本已是最新")
           }
+        })
+      } else {
+        if(now && $("superView")) {
+          ui.showToastView($("superView"), "blue", "当前版本已是最新")
         }
       }
     }
@@ -90,7 +92,7 @@ function updateScript() {
   $http.download({
     url: url,
     showsProgress: false,
-    timeout: 5,
+    timeout: 10,
     progress: function(bytesWritten, totalBytes) {
       var percentage = bytesWritten * 1.0 / totalBytes
       if($("myProgress")) {
@@ -99,6 +101,11 @@ function updateScript() {
     },
     handler: function(resp) {
       let box = resp.data
+      if (!box || resp.error || resp.response.statusCode !== 200) {
+        $ui.toast("下载更新包失败,请稍后再试！")
+        return
+      }
+      
       $addin.save({
         name: scriptName,
         data: box,

@@ -1,3 +1,4 @@
+const util = require('./util')
 let settings = require('./settings')
 let _settingsConfig = $file.read('settings.json')
 const $SETTINGS = JSON.parse(_settingsConfig.string)
@@ -280,34 +281,19 @@ function render () {
                   make.left.equalTo($("tmp").right)
                 }
               },
-              // 风向
+              // 风向、空气质量
               {
                 type: "label",
                 props: {
-                  id: "wind",
-                  align: $align.left,
-                  font: $font("PingFangSC", 13),
-                  textColor: $color(COLORS.wind),
-                  autoFontSize: true
-                },
-                layout: function(make, view) {
-                  make.width.equalTo(screen.width * 0.07)
-                  make.left.equalTo($("weather-icon").right)
-                }
-              },
-              // 空气质量
-              {
-                type: "label",
-                props: {
-                  id: "air",
+                  id: "wind_air",
                   align: $align.left,
                   font: $font("PingFangSC", 13),
                   textColor: $color(COLORS.air),
                   autoFontSize: true
                 },
                 layout: function(make, view) {
-                  make.width.equalTo(screen.width * 0.38)
-                  make.left.equalTo($("wind").right).offset(5)
+                  make.width.equalTo(screen.width * 0.45)
+                  make.left.equalTo($("weather-icon").right).offset(5)
                 }
               },
               {
@@ -377,9 +363,9 @@ function refreshUI() {
   }
   config = tmp
 
-  $('image').image = config.image || $data({ path: defaultImage }).image
+  util.setValue('image', 'image', config.image || $data({ path: defaultImage }).image)
 
-  $('commemorationDayText').text = config.commemorationDayText
+  util.setValue('commemorationDayText', 'text', config.commemorationDayText)
 
   if (config.commemorationDate !== _lastConfig.commemorationDate) {
     refreshCommemorationDay()
@@ -404,13 +390,13 @@ function refreshTime() {
 
   // 判断日期是否改变
   if (lastDate !== day) {
-    $('year').text = year
-    $('month').text = month
-    $('day').text = day
+    util.setValue('year', 'text', year)
+    util.setValue('month', 'text', month)
+    util.setValue('day', 'text', day)
 
     // 星期数
     let dayStr = '星期'+'日一二三四五六'.charAt(date.getDay())
-    $('dayOfWeek').text = dayStr
+    util.setValue('dayOfWeek', 'text', dayStr)
 
     $http.get({
       url: "https://www.sojson.com/open/api/lunar/json.shtml",
@@ -421,7 +407,7 @@ function refreshTime() {
           return
         }
         let data = res.data
-        $('lunar').text = `${data.cnmonth}月${data.cnday}`
+        util.setValue('lunar', 'text', `${data.cnmonth}月${data.cnday}`)
       }
     })
 
@@ -436,25 +422,20 @@ function refreshTime() {
  */
 function refreshCommemorationDay() {
   let date = new Date()
+  date.setHours(0,0,0,0)
   let d2 = new Date(config.commemorationDate)
+  d2.setHours(0,0,0,0)
   // 纪念天数
   let commemorationDay = Math.abs(Math.floor((date - d2) / 1000 / 60 / 60 / 24))
-  $('commemorationDay').text = `${commemorationDay}天`
+  util.setValue('commemorationDay', 'text', `${commemorationDay}天`)
 }
 
 /**
  * 更新天气、空气质量
  */
 function refreshWeather() {
-  let last_weather = $cache.get("last_weather")
-  if (last_weather) {
-    renderWeather(last_weather)
-  }
-
-  let last_air = $cache.get("last_air")
-  if (last_air) {
-    renderAir(last_air)
-  }
+  renderWeather()
+  renderWindAir()
 
   // 天气
   $http.get({
@@ -465,9 +446,8 @@ function refreshWeather() {
       if (data.status !== 'ok' || !data.now) {
         return
       }
-      let weather = data.now
-      renderWeather(weather)
-      $cache.set("last_weather", weather)
+      $cache.set("last_weather", data.now)
+      renderWeather()
     }
   })
 
@@ -480,21 +460,31 @@ function refreshWeather() {
       if (data.status !== 'ok' || !data.air_now_city) {
         return
       }
-      let air = data.air_now_city
-      renderAir(air)
-      $cache.set("last_air", air)
+      $cache.set("last_air", data.air_now_city)
+      renderWindAir()
     }
   })
 }
 
-function renderWeather(weather) {
-  $('tmp').text = `${weather.tmp}°C`
-  $('weather-icon').src = `assets/weather/${weather.cond_code}.png`
-  $('wind').text = weather.wind_dir
+function renderWeather() {
+  let weather = $cache.get("last_weather")
+  if (weather) {
+    util.setValue('tmp', 'text', `${weather.tmp}°C`)
+    util.setValue('weather-icon', 'src', `assets/weather/${weather.cond_code}.png`)
+  }
 }
 
-function renderAir(air) {
-  $('air').text = `${air.qlty} | AQI: ${air.aqi} | PM2.5: ${air.pm25}`
+function renderWindAir() {
+  let str = ""
+  let weather = $cache.get("last_weather")
+  if (weather) {
+    str += `${weather.wind_dir}  `
+  }
+  let air = $cache.get("last_air")
+  if (air) {
+    str += `${air.qlty} | AQI: ${air.aqi} | PM2.5: ${air.pm25}`
+  }
+  util.setValue('wind_air', 'text', str)
 }
 
 /**
@@ -530,14 +520,13 @@ function refreshBattery() {
     }
   }
 
-  $('betteryState').text = `${betteryState}: `
-  $('betteryLevel').text = `${betteryLevel}%`
-  $('betteryLevel').textColor = $color(batteryColor)
+  util.setValue('betteryState', 'text', `${betteryState}: `)
+  util.setValue('betteryLevel', 'text', `${betteryLevel}%`)
+  util.setValue('betteryLevel', 'textColor', $color(batteryColor))
 }
 
 function initData() {
   if (!$('year') || !$('betteryLevel')) {
-    console.log('===')
     renderingFailed = true
     return
   }
@@ -549,9 +538,6 @@ function initData() {
   $timer.schedule({
     interval: 10,
     handler: function() {
-      if (!$('year') || !$('betteryLevel')) {
-        return
-      }
       refreshTime()
       refreshBattery()
     }
