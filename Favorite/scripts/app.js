@@ -65,7 +65,7 @@ function render () {
         props: {
           id: "superView"
         },
-        layout: $app.env === $env.widget ? $layout.fill : function(make, view) {
+        layout: $app.env === $env.today ? $layout.fill : function(make, view) {
           make.left.right.inset(0)
           make.height.equalTo(105)
         },
@@ -251,6 +251,9 @@ function render () {
           },
           {
             type: "view",
+            props: {
+              id: "weatherView"
+            },
             layout: function(make, view) {
               make.height.equalTo(20)
               make.bottom.inset(5)
@@ -270,6 +273,7 @@ function render () {
                 },
                 layout: function(make, view) {
                   make.width.equalTo(screen.width * 0.08)
+                  make.centerY.equalTo(view.super)
                 }
               },
               // 天气图标
@@ -284,6 +288,7 @@ function render () {
                   make.size.equalTo($size(size, size))
                   // make.bottom.inset(-(size * (400 / screen.width)))
                   make.left.equalTo($("tmp").right)
+                  make.centerY.equalTo(view.super)
                 }
               },
               // 风向、空气质量
@@ -297,8 +302,9 @@ function render () {
                   autoFontSize: true
                 },
                 layout: function(make, view) {
-                  make.width.equalTo(screen.width * 0.45)
+                  make.width.equalTo(screen.width * 0.5)
                   make.left.equalTo($("weather-icon").right).offset(5)
+                  make.centerY.equalTo(view.super)
                 }
               },
               {
