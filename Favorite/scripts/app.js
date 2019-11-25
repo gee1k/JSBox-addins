@@ -19,7 +19,6 @@ let _lastConfig = config
 
 // 请勿修改的变量
 let lastDate
-let renderingFailed = false
 
 const screen = $device.info["screen"]
 
@@ -27,6 +26,14 @@ function init() {
   render()
   
   initData()
+
+  $timer.schedule({
+    interval: 10,
+    handler: function() {
+      refreshTime()
+      refreshBattery()
+    }
+  });
 }
 
 function render () {
@@ -49,10 +56,7 @@ function render () {
     events: {
       // 界面加载后
       appeared: function() {
-        if (renderingFailed) {
-          initData()
-          renderingFailed = false
-        }
+        initData()
       }
     },
     views: [
@@ -526,22 +530,10 @@ function refreshBattery() {
 }
 
 function initData() {
-  if (!$('year') || !$('betteryLevel')) {
-    renderingFailed = true
-    return
-  }
   // 初始化信息
   refreshTime()
   refreshWeather() 
   refreshBattery()
-
-  $timer.schedule({
-    interval: 10,
-    handler: function() {
-      refreshTime()
-      refreshBattery()
-    }
-  });
 }
 
 module.exports = {

@@ -103,6 +103,9 @@ function updateScript() {
       let box = resp.data
       if (!box || resp.error || resp.response.statusCode !== 200) {
         $ui.toast("下载更新包失败,请稍后再试！")
+        if($("myProgress")) {
+          $("myProgress").remove()
+        }
         return
       }
       
