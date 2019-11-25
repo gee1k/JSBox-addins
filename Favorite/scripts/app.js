@@ -65,9 +65,9 @@ function render () {
         props: {
           id: "superView"
         },
-        layout: function(make, view) {
+        layout: $app.env === $env.widget ? $layout.fill : function(make, view) {
           make.left.right.inset(0)
-          make.height.equalTo(220)
+          make.height.equalTo(105)
         },
         views: [
           // 图片
@@ -252,7 +252,8 @@ function render () {
           {
             type: "view",
             layout: function(make, view) {
-              make.top.inset(imageHeight + 20)
+              make.height.equalTo(20)
+              make.bottom.inset(5)
               make.left.inset(10)
               make.right.inset(15)
             },
@@ -281,7 +282,7 @@ function render () {
                 layout: function(make, view) {
                   let size = screen.width * 0.05
                   make.size.equalTo($size(size, size))
-                  make.bottom.inset(-(size * (400 / screen.width)))
+                  // make.bottom.inset(-(size * (400 / screen.width)))
                   make.left.equalTo($("tmp").right)
                 }
               },
