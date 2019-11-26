@@ -35,7 +35,6 @@ function runSettings(refreshUI) {
       {
         type: "view",
         props: {
-          // bgcolor: $color("#FF0000")
         },
         layout: $layout.fill,
         views: [
@@ -61,13 +60,6 @@ function runSettings(refreshUI) {
                 $photo.pick({
                   handler: function(resp) {
                     $('settings_image').image = resp.image
- 
-                    // let scale = image.size.height / $('settings_imageView').size.height
-                    // let width = image.size.width / scale
-                    // console.info($size(width, $('settings_imageView').size.height))
-                    // $('settings_imageView').updateLayout(function(make) {
-                    //   make.size.equalTo($size(width, $('imageView').size.height))
-                    // })
                   }
                 })
               }
@@ -143,6 +135,51 @@ function runSettings(refreshUI) {
         }
       },
       {
+        type: "view",
+        props: {
+          id: "weather_switch_view"
+        },
+        layout: function(make, view) {
+          make.left.right.inset(20)
+          make.height.equalTo(30)
+          make.top.equalTo($("settings_commemorationDayButton").bottom).offset(15) 
+        },
+        views: [
+          {
+            type: "label",
+            props: {
+              id: "weather_switch_label",
+              text: "启用天气:",
+              font: $font(14),
+              userInteractionEnabled: false
+            },
+            layout: function(make, view) {
+              make.left.inset(0)
+              make.centerY.equalTo(view.super)
+            }
+          },
+          {
+            type: "switch",
+            props: {
+              id: "weather_switch",
+              on: true,
+              onColor: $color("green"),
+              text: "天气",
+              userInteractionEnabled: true
+            },
+            layout: function(make, view) {
+              make.left.equalTo($("weather_switch_label").right).offset(5) 
+              make.centerY.equalTo(view.super)
+            },
+            events: {
+              changed: function(sender) {
+                refreshWeatherFormVisible()
+              }
+            }
+          }
+        ]
+      },
+      {
         type: "label",
         props: {
           id: "settings_heweatherKey_label",
@@ -152,8 +189,8 @@ function runSettings(refreshUI) {
           font: $font(12)
         },
         layout: function(make, view) {
-          make.left.right.inset(20) 
-          make.top.equalTo($("settings_commemorationDayButton").bottom).offset(20) 
+          make.right.inset(20) 
+          make.top.equalTo($("weather_switch_view").bottom).offset(5) 
         },
         events: {
           tapped: function(sender) {
@@ -231,6 +268,10 @@ function renderData() {
       $('settings_commemorationDayButton').info = {date: cacheData.commemorationDate}
     }
 
+    $('weather_switch').on = !cacheData.weatherDisabled
+
+    refreshWeatherFormVisible()
+
     if (cacheData.heweatherKey && cacheData.heweatherKey.length) {
       $('settings_heweatherKey').text = cacheData.heweatherKey
     }
@@ -239,6 +280,12 @@ function renderData() {
   // 启用保存按钮
   $("settings_saveButton").enabled = true
   $("settings_saveButton").bgcolor = $("settings_saveButton")._originBgcolor
+}
+
+function refreshWeatherFormVisible() {
+  let switchOn = $('weather_switch').on
+  $('settings_heweatherKey_label').hidden = !switchOn
+  $('settings_heweatherKey').hidden = !switchOn
 }
 
 /**
@@ -267,8 +314,10 @@ function saveData(refreshUI) {
     image: resizedImage,
     commemorationDayText: $('settings_commemorationDayText').text,
     commemorationDate: $('settings_commemorationDayButton').info.date,
-    heweatherKey: $('settings_heweatherKey').text
+    heweatherKey: $('settings_heweatherKey').text,
+    weatherDisabled: !$('weather_switch').on
   }
+
   $ui.loading(true)
   $cache.setAsync({
     key: "data",
@@ -324,7 +373,7 @@ function isValidForm() {
     $ui.error("请选择纪念日开始日期!")
     return false
   }
-  if (!$('settings_heweatherKey').text) {
+  if ($('weather_switch').on && !$('settings_heweatherKey').text) {
     $ui.error("请填写和风天气Key，用于获取天气信息!")
     return false
   }

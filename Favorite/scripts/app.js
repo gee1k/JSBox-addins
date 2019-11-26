@@ -382,10 +382,7 @@ function refreshUI() {
     refreshCommemorationDay()
   }
   
-  if (config.heweatherKey !== _lastConfig.heweatherKey) {
-    refreshWeather()
-  }
-  
+  refreshWeather()
 
   _lastConfig = config
 }
@@ -448,6 +445,10 @@ function refreshWeather() {
   renderWeather()
   renderWindAir()
 
+  if (config.weatherDisabled || !config.heweatherKey) {
+    return
+  }
+
   // 天气
   $http.get({
     url: `https://free-api.heweather.net/s6/weather/now?location=auto_ip&key=${config.heweatherKey}`,
@@ -478,24 +479,41 @@ function refreshWeather() {
 }
 
 function renderWeather() {
-  let weather = $cache.get("last_weather")
-  if (weather) {
-    util.setValue('tmp', 'text', `${weather.tmp}°C`)
-    util.setValue('weather-icon', 'src', `assets/weather/${weather.cond_code}.png`)
+  if (!config.weatherDisabled) {
+    let weather = $cache.get("last_weather")
+    if (weather) {
+      util.setValue('tmp', 'hidden', false)
+      util.setValue('weather-icon', 'hidden', false)
+      util.setValue('tmp', 'text', `${weather.tmp}°C`)
+      util.setValue('weather-icon', 'src', `assets/weather/${weather.cond_code}.png`)
+    }
+  } else {
+    util.setValue('tmp', 'hidden', true)
+    util.setValue('weather-icon', 'hidden', true)
   }
+  
 }
 
 function renderWindAir() {
-  let str = ""
-  let weather = $cache.get("last_weather")
-  if (weather) {
-    str += `${weather.wind_dir}  `
+  if (!config.weatherDisabled) {
+    util.setValue('wind_air', 'hidden', false)
+    let weather = $cache.get("last_weather")
+    if (weather) {
+      let str = ""
+      let weather = $cache.get("last_weather")
+      if (weather) {
+        str += `${weather.wind_dir}  `
+      }
+      let air = $cache.get("last_air")
+      if (air) {
+        str += `${air.qlty} | AQI: ${air.aqi} | PM2.5: ${air.pm25}`
+      }
+      util.setValue('wind_air', 'text', str)
+    }
+  } else {
+    util.setValue('wind_air', 'hidden', true)
   }
-  let air = $cache.get("last_air")
-  if (air) {
-    str += `${air.qlty} | AQI: ${air.aqi} | PM2.5: ${air.pm25}`
-  }
-  util.setValue('wind_air', 'text', str)
+  
 }
 
 /**
